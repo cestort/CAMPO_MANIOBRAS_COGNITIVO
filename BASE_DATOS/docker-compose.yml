@@ -1,0 +1,79 @@
+# =========================================
+# Base de datos + administración + backups programables
+# =========================================
+# .env requerido (ejemplo):
+#   TZ=Europe/Madrid
+#   POSTGRES_USER=postgres
+#   POSTGRES_PASSWORD=Admin
+#   POSTGRES_DB=PRUEBAS
+#   PGADMIN_DEFAULT_EMAIL=caei@caei.com
+#   PGADMIN_DEFAULT_PASSWORD=U5u4r10_C431
+#   PORT_PGADMIN=5050
+# -----------------------------------------
+
+services:
+  # -------------------------------
+  # PostgreSQL (datos persistentes)
+  # -------------------------------
+  db:
+    image: postgres:16-alpine
+    container_name: campos_maniobras_db
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}         # usuario inicial del clúster
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD} # contraseña inicial
+      POSTGRES_DB: ${POSTGRES_DB}             # base creada al primer arranque
+      TZ: ${TZ}
+    volumes:
+      - pgdata:/var/lib/postgresql/data       # volumen nombrado -> persistencia real
+      - ./backups:/backups                    # carpeta en el host para dumps (cómodo)
+    healthcheck:
+      # Comprueba que la DB responde antes de que otros dependan de ella
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB} -h 127.0.0.1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [backend]
+    ports:
+      - "5432:5432"                           # EXPOSE hacia el host/LAN (Power BI, etc.)
+      # ⚠️ Si no necesitas acceso desde la LAN, comenta esta línea por seguridad.
+
+  # --------------------------------------
+  # pgAdmin (UI web para administrar PG)
+  # --------------------------------------
+  pgadmin:
+    image: dpage/pgadmin4:8
+    container_name: campo_maniobras_pgadmin
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}       # login de pgAdmin
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD} # login de pgAdmin
+      TZ: ${TZ}
+      # Si quieres permitir emails tipo admin@local, descomenta:
+      # PGADMIN_CONFIG_ALLOW_SPECIAL_EMAIL_DOMAINS: '["local"]'
+    ports:
+      - "${PORT_PGADMIN}:80"                  # Acceso: http://<IP_HOST>:${PORT_PGADMIN}
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin         # guarda servidores registrados, preferencias...
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [backend]
+
+
+
+# ----------------
+# Redes del stack
+# ----------------
+networks:
+  backend:                                     # red interna para que los servicios se resuelvan por nombre
+    # más adelante puedes añadir "frontend" si metes un proxy/capa pública
+
+# ----------------------------
+# Volúmenes (persisten datos)
+# ----------------------------
+volumes:
+  pgdata:                                      # datos de PostgreSQL (¡no se borran al recrear contenedores!)
+  pgadmin-data:                                # config de pgAdmin (servidores guardados, prefs)

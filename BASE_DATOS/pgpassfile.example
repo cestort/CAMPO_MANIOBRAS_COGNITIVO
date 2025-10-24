@@ -1,0 +1,13 @@
+# Formato: hostname:port:database:username:password
+# 
+# Ejemplo:
+# db:5432:*:postgres:tu-contraseña-aqui
+#
+# Para usar:
+# 1. Copia este archivo: cp pgpassfile.example pgpassfile
+# 2. Edita pgpassfile con tus credenciales reales
+# 3. Establece permisos: chmod 600 pgpassfile
+#
+# Nota: El archivo pgpassfile está en .gitignore y no se subirá a Git
+
+db:5432:*:postgres:CAMBIAR_CONTRASEÑA

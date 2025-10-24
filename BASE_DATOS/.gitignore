@@ -1,0 +1,14 @@
+# Archivos de configuración con contraseñas
+pgpassfile
+
+# Backups de base de datos
+backups/*.sql
+backups/*.dump
+backups/*.backup
+
+# Archivos temporales
+*.tmp
+*.log
+
+# No ignorar archivos de ejemplo
+!pgpassfile.example

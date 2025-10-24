@@ -51,12 +51,17 @@ services:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}       # login de pgAdmin
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD} # login de pgAdmin
       TZ: ${TZ}
+      # Configuración para facilitar uso en desarrollo
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
       # Si quieres permitir emails tipo admin@local, descomenta:
       # PGADMIN_CONFIG_ALLOW_SPECIAL_EMAIL_DOMAINS: '["local"]'
     ports:
       - "${PORT_PGADMIN}:80"                  # Acceso: http://<IP_HOST>:${PORT_PGADMIN}
     volumes:
       - pgadmin-data:/var/lib/pgadmin         # guarda servidores registrados, preferencias...
+      - ./servers.json:/pgadmin4/servers.json:ro  # Servidor pre-configurado (conexión automática)
+      - ./pgpassfile:/tmp/pgpassfile:ro           # Credenciales para conexión automática
     depends_on:
       db:
         condition: service_healthy
